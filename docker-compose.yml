@@ -1,0 +1,74 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: anime-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-anime}
+      POSTGRES_USER: ${POSTGRES_USER:-anime}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - anime-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-anime} -d ${POSTGRES_DB:-anime}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  anime:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: anime
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3020:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      NEXT_TELEMETRY_DISABLED: 1
+      DATABASE_URL: postgresql://${POSTGRES_USER:-anime}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-anime}
+      SUBTITLE_STORAGE_DIR: /app/data/subtitles
+      WORK_AUDIT_DIR: /app/data/work-audit
+    volumes:
+      - ./subtitle-data:/app/data/subtitles
+      - ./work-audit:/app/data/work-audit:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/auth/setup-status').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: anime-caddy
+    restart: unless-stopped
+    depends_on:
+      anime:
+        condition: service_healthy
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - anime-caddy-data:/data
+      - anime-caddy-config:/config
+
+volumes:
+  anime-postgres-data:
+  anime-caddy-data:
+    name: anime-caddy-data
+  anime-caddy-config:
+    name: anime-caddy-config

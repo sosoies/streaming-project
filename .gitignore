@@ -1,0 +1,63 @@
+# dependencies
+/node_modules
+__pycache__/
+*.pyc
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/.subtitle-cache-tools/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env*.local
+
+# vercel
+.vercel
+
+# Persistent subtitle files and the AniAll attachment archive corpus
+/subtitle-data/*
+!/subtitle-data/.gitkeep
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# archives
+*.zip
+
+# temporary files
+*스크린샷*
+/*.png
+
+*.sh
+
+# markdown files (except root README.md)
+*.md
+!/README.md
+!/readme.md
+
+# Pi-generated Work audit snapshots (contain internal file paths and DB exports)
+/work-audit/
+
+# Pi image deployment state
+/.pi-image/
+!/scripts/deploy-pi-image.sh
+!/scripts/test-arm64-image.sh
